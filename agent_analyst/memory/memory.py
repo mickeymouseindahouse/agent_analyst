@@ -100,7 +100,7 @@ Provide a concise summary of:
         # Call the LLM for summarization
         try:
             response = client.chat.completions.create(
-                model="gpt-4",
+                model="Qwen/Qwen3-30B-A3B",
                 messages=[
                     {"role": "system", "content": "You are an AI assistant that summarizes agent interactions."},
                     {"role": "user", "content": prompt}
@@ -147,7 +147,7 @@ If there are no relevant past interactions, respond with "No relevant past infor
         # Call the LLM for memory retrieval
         try:
             response = client.chat.completions.create(
-                model="gpt-4",
+                model="Qwen/Qwen3-30B-A3B",
                 messages=[
                     {"role": "system", "content": "You are an AI assistant that retrieves relevant information from past interactions."},
                     {"role": "user", "content": prompt}

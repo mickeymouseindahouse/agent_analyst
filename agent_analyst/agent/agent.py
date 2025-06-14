@@ -21,11 +21,15 @@ class ReActAgent:
         self.tool_map = {tool["function"]["name"]: tool for tool in tools if "function" in tool}
         
         # Get API key from environment variable
-        self.api_key = os.environ.get("OPENAI_API_KEY")
+        self.api_key = os.environ.get("NEBIUS_API_KEY")
         if not self.api_key:
-            raise ValueError("OPENAI_API_KEY environment variable not set")
+            raise ValueError("NEBIUS_API_KEY environment variable not set")
         
-        self.client = openai.OpenAI(api_key=self.api_key)
+        # Initialize OpenAI client with Nebius API endpoint
+        self.client = openai.OpenAI(
+            base_url="https://api.studio.nebius.com/v1/",
+            api_key=self.api_key
+        )
         
         # Initialize memory
         self.memory = Memory()
@@ -96,7 +100,7 @@ class ReActAgent:
             
             # Call the model
             response = self.client.chat.completions.create(
-                model="gpt-4",
+                model="Qwen/Qwen3-30B-A3B",
                 messages=messages,
                 tools=self.tools,
                 tool_choice="auto"
@@ -160,7 +164,7 @@ class ReActAgent:
         ]
         
         planning_response = self.client.chat.completions.create(
-            model="gpt-4",
+            model="Qwen/Qwen3-30B-A3B",
             messages=planning_messages
         )
         
@@ -187,7 +191,7 @@ class ReActAgent:
             
             # Call the model
             response = self.client.chat.completions.create(
-                model="gpt-4",
+                model="Qwen/Qwen3-30B-A3B",
                 messages=execution_messages,
                 tools=self.tools,
                 tool_choice="auto"

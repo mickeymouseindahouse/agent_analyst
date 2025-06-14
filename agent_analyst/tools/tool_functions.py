@@ -168,12 +168,15 @@ Conversations:
 {formatted_data}
 """
     
-    # Call the OpenAI API for summarization
-    client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    # Call the OpenAI API for summarization using Nebius endpoint
+    client = openai.OpenAI(
+        base_url="https://api.studio.nebius.com/v1/",
+        api_key=os.environ.get("NEBIUS_API_KEY")
+    )
     
     try:
         response = client.chat.completions.create(
-            model="gpt-4",  # You can use a different model if preferred
+            model="Qwen/Qwen3-30B-A3B",  # Using Qwen model
             messages=[
                 {"role": "system", "content": "You are an AI assistant that summarizes customer service conversations."},
                 {"role": "user", "content": prompt}
