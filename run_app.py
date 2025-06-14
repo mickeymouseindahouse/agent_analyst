@@ -69,7 +69,12 @@ def main():
     """Main function to run the application."""
     parser = argparse.ArgumentParser(description="Run the Customer Service Dataset Q&A application")
     parser.add_argument("--install-only", action="store_true", help="Only install dependencies without running the app")
-    parser.add_argument("--port", type=int, default=8501, help="Port to run the Streamlit app on")
+    
+    # Get port from environment variable or use default/command line argument
+    default_port = int(os.environ.get("PORT", 8501))
+    parser.add_argument("--port", type=int, default=default_port, 
+                        help=f"Port to run the Streamlit app on (default: {default_port}, can be set with PORT env var)")
+    
     args = parser.parse_args()
     
     # Add the current directory to the Python path
