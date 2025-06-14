@@ -12,8 +12,6 @@ The application consists of:
 4. **Dataset**: Bitext - Customer Service Tagged Training dataset
 5. **Memory**: Persistent memory system for tracking and analyzing interactions
 
-![Architecture Diagram](architecture_diagram.png)
-
 ## Features
 
 - Answer structured questions about the dataset (categories, intents, distributions)
@@ -46,26 +44,11 @@ The agent can handle three main categories of questions:
 
 ## Dataset
 
-The application uses the [Bitext - Customer Service Tagged Training dataset](https://huggingface.co/datasets/bitext/Bitext-customer-support-llm-chatbot-training-dataset) from Hugging Face, which contains:
+The application uses the [Bitext - Customer Service Tagged Training dataset](https://huggingface.co/datasets/bitext/Bitext-customer-support-llm-chatbot-training-dataset) from Hugging Face.
 
-- 26,872 customer service conversations
-- Each conversation has:
-  - Customer instruction/query
-  - Agent response
-  - Intent label
-  - Category label
-  - Flags
+## Deployment
 
-## Memory System
-
-The agent includes a memory system that:
-
-1. **Stores interactions**: Records all user queries, agent responses, and tools used
-2. **Retrieves relevant information**: Finds past interactions relevant to the current query
-3. **Summarizes patterns**: Generates summaries of interaction patterns and insights
-4. **Improves responses**: Uses past interactions to provide more consistent and informed answers
-
-## Setup and Installation
+### Local Development
 
 1. Clone the repository:
 ```bash
@@ -80,13 +63,20 @@ pip install -r requirements.txt
 
 3. Set up your OpenAI API key:
 ```bash
-export OPENAI_API_KEY=your_api_key_here
+export NEBIUS_API_KEY=your_api_key_here
 ```
 
 4. Run the application:
 ```bash
-streamlit run agent_analyst/app/app.py
+streamlit run streamlit_app.py
 ```
+
+### Streamlit Cloud Deployment
+
+1. Fork this repository
+2. Connect your GitHub account to Streamlit Cloud
+3. Deploy the app by selecting this repository
+4. Add the NEBIUS_API_KEY as a secret in the Streamlit Cloud settings
 
 ## Example Usage
 
