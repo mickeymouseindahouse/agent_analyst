@@ -3,7 +3,6 @@ import os
 import sys
 import subprocess
 import argparse
-import platform
 
 def check_dependencies():
     """Check if required Python packages are installed and install if missing."""
@@ -11,7 +10,6 @@ def check_dependencies():
         "streamlit",
         "pandas",
         "openai",
-        "datasets",
         "matplotlib",
         "seaborn",
         "pydantic",
@@ -53,18 +51,6 @@ def setup_environment():
             print("Warning: NEBIUS_API_KEY not found in environment variables and nebius.key file not found.")
             print("Please set the NEBIUS_API_KEY environment variable or create a nebius.key file")
 
-def download_dataset():
-    """Download the dataset if not already present."""
-    print("Checking dataset...")
-    try:
-        from datasets import load_dataset
-        # Just load a small sample to verify it works
-        dataset = load_dataset("bitext/Bitext-customer-support-llm-chatbot-training-dataset", split="train[:10]")
-        print("✓ Dataset is accessible")
-    except Exception as e:
-        print(f"Error accessing dataset: {e}")
-        print("Please check your internet connection and Hugging Face access")
-
 def main():
     """Main function to run the application."""
     parser = argparse.ArgumentParser(description="Run the Customer Service Dataset Q&A application")
@@ -86,12 +72,9 @@ def main():
     # Set up environment
     setup_environment()
     
-    # Download dataset
-    download_dataset()
-    
     if not args.install_only:
         print(f"Starting Streamlit app on port {args.port}...")
-        # Run the Streamlit app
+        # Always specify the port explicitly
         subprocess.run(["streamlit", "run", "app/app.py", "--server.port", str(args.port)])
 
 if __name__ == "__main__":

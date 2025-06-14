@@ -6,7 +6,6 @@ import json
 from typing import Literal
 from pydantic import BaseModel, Field
 from openai import OpenAI
-from datasets import load_dataset
 import re
 # Removed global streamlit import
 
@@ -28,11 +27,10 @@ client = OpenAI(
     api_key=api_key
 )
 
-# Load Bitext dataset
-def load_bitext_data():
-    return load_dataset("bitext/Bitext-customer-support-llm-chatbot-training-dataset", split="train").to_pandas()
+# Load Bitext dataset from CSV
+from data.download_dataset import load_dataset_df
 
-df = load_bitext_data()
+df = load_dataset_df()
 
 def remove_think_tags(text):
     """Remove all content between <think> and </think> tags, including the tags."""

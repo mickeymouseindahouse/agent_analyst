@@ -1,60 +1,38 @@
 import pandas as pd
-from datasets import load_dataset
 import os
-
-def download_dataset():
-    """
-    Download the Bitext customer support dataset from Hugging Face
-    and save it as a CSV file.
-    """
-    print("Downloading dataset from Hugging Face...")
-    
-    # Create data directory if it doesn't exist
-    os.makedirs(os.path.dirname(get_dataset_path()), exist_ok=True)
-    
-    # Load dataset from Hugging Face
-    dataset = load_dataset("bitext/Bitext-customer-support-llm-chatbot-training-dataset")
-    
-    # Convert to pandas DataFrame and save as CSV
-    df = pd.DataFrame(dataset['train'])
-    df.to_csv(get_dataset_path(), index=False)
-    
-    print(f"Dataset downloaded and saved to {get_dataset_path()}")
-    print(f"Dataset shape: {df.shape}")
-    
-    return df
-
-def get_dataset_path():
-    """
-    Get the path to the dataset CSV file.
-    """
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                        "Bitext_Sample_Customer_Support_Training_Dataset.csv")
+from datasets import load_dataset
 
 def load_dataset_df():
     """
-    Load the dataset from the CSV file.
-    If the file doesn't exist, download it first.
+    Load the dataset from a local CSV file or from Hugging Face if the CSV doesn't exist.
+    
+    Returns:
+        pandas.DataFrame: The loaded dataset
     """
-    if not os.path.exists(get_dataset_path()):
-        return download_dataset()
+    csv_path = os.path.join(os.path.dirname(__file__), "customer_service_data.csv")
     
-    return pd.read_csv(get_dataset_path())
-
-if __name__ == "__main__":
-    # Download the dataset if running this script directly
-    df = download_dataset()
+    # Check if the CSV file exists
+    if os.path.exists(csv_path):
+        print(f"Loading dataset from local CSV file: {csv_path}")
+        # Load the CSV file
+        df = pd.read_csv(csv_path)
+    else:
+        print("Local CSV file not found. Loading dataset from Hugging Face...")
+        try:
+            # Fall back to loading from Hugging Face
+            df = load_dataset("bitext/Bitext-customer-support-llm-chatbot-training-dataset", split="train").to_pandas()
+            
+            # Save to CSV for future use
+            print(f"Saving dataset to CSV file for future use: {csv_path}")
+            df.to_csv(csv_path, index=False)
+        except Exception as e:
+            raise Exception(f"Failed to load dataset from Hugging Face: {str(e)}")
     
-    # Print dataset info
-    print("\nDataset columns:")
-    print(df.columns.tolist())
+    # Ensure required columns exist
+    required_columns = ["category", "intent", "instruction", "response"]
+    missing_columns = [col for col in required_columns if col not in df.columns]
     
-    print("\nSample data:")
-    print(df.head(3))
+    if missing_columns:
+        raise ValueError(f"Dataset is missing required columns: {', '.join(missing_columns)}")
     
-    # Print some statistics
-    print("\nIntent distribution:")
-    print(df['intent'].value_counts().head(10))
-    
-    print("\nCategory distribution:")
-    print(df['category'].value_counts().head(10))
+    return df
