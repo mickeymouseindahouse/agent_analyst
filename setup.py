@@ -11,5 +11,7 @@ setup(
         "seaborn",
         "openai",
         "datasets",
+        "pydantic",
+        "python-dotenv",
     ],
 )

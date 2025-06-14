@@ -3,9 +3,15 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from agent_analyst.tools.tools import get_tools
-from agent_analyst.agent.agent import ReActAgent
-from agent_analyst.data.download_dataset import load_dataset_df
+from tools.tools import get_tools
+from agent.agent import ReActAgent
+from data.download_dataset import load_dataset_df
+import sys
+import os
+
+# Add the parent directory to the path to import agent_analyst_task
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from agent_analyst_task import handle_question
 
 st.set_page_config(page_title="Customer Service Dataset Q&A", layout="wide")
 
@@ -25,7 +31,7 @@ st.sidebar.title("Settings")
 # Toggle for planning mode
 planning_mode = st.sidebar.radio(
     "Planning Mode",
-    ["Pre-planning + Execution", "ReActive Dynamic Planning"],
+    ["Pre-planning", "ReActive"],
     index=1
 )
 
@@ -61,12 +67,15 @@ for question in example_questions:
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": question})
         
-        # Get response from agent
+        # Get response based on planning mode
         with st.spinner("Thinking..."):
-            response = st.session_state.agent.run(
-                question, 
-                dynamic_planning=(planning_mode == "ReActive Dynamic Planning")
-            )
+            if planning_mode == "ReActive":
+                response = st.session_state.agent.run(question)
+            else:
+                # Use the pre-planning approach from agent_analyst_task.py
+                if "history" not in st.session_state:
+                    st.session_state.history = []
+                response = handle_question(question, st.session_state.history, "Pre-planning", streamlit_available=True, return_full_results=False)
         
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": response})
@@ -91,11 +100,14 @@ if prompt := st.chat_input("Ask a question about the customer service dataset"):
     # Display assistant response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            # Get response from agent
-            response = st.session_state.agent.run(
-                prompt, 
-                dynamic_planning=(planning_mode == "ReActive Dynamic Planning")
-            )
+            # Get response based on planning mode
+            if planning_mode == "ReActive":
+                response = st.session_state.agent.run(prompt)
+            else:
+                # Use the pre-planning approach from agent_analyst_task.py
+                if "history" not in st.session_state:
+                    st.session_state.history = []
+                response = handle_question(prompt, st.session_state.history, "Pre-planning", streamlit_available=True, return_full_results=False)
             st.write(response)
     
     # Add assistant response to chat history

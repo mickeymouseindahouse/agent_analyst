@@ -2,7 +2,7 @@ from typing import List, Dict, Any, Optional, Union
 import pandas as pd
 import json
 import os
-from agent_analyst.data.download_dataset import load_dataset_df
+from data.download_dataset import load_dataset_df
 
 # Load the dataset
 df = load_dataset_df()
@@ -206,6 +206,29 @@ def get_tools() -> List[Dict[str, Any]]:
                             "type": "integer",
                             "description": "Number of top categories to show",
                             "default": 10
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "show_dataframe",
+                "description": "Show the dataset as a pandas dataframe",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "data_type": {
+                            "type": "string",
+                            "description": "Type of data to show",
+                            "enum": ["all", "category", "intent", "instruction", "response"],
+                            "default": "all"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of rows to show",
+                            "default": 20
                         }
                     }
                 }
