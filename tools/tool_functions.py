@@ -2,7 +2,7 @@ from typing import List, Dict, Any, Optional, Union
 import pandas as pd
 import openai
 import os
-from agent_analyst.data.download_dataset import load_dataset_df
+from data.download_dataset import load_dataset_df
 
 # Load the dataset
 df = load_dataset_df()
@@ -240,6 +240,32 @@ def get_category_distribution(top_n: int = 10) -> Dict[str, Any]:
         "total_conversations": len(df)
     }
 
+def show_dataframe(data_type: str = "all", limit: int = 20) -> Dict[str, Any]:
+    """
+    Show the dataset as a pandas dataframe.
+    
+    Args:
+        data_type: Type of data to show ('all', 'category', 'intent', 'instruction', 'response')
+        limit: Maximum number of rows to show
+        
+    Returns:
+        Dictionary with the dataframe data
+    """
+    if data_type == "all":
+        result_df = df.head(limit)
+    elif data_type in df.columns:
+        result_df = df[[data_type]].head(limit)
+    else:
+        return {"error": f"Invalid data_type: {data_type}. Valid options are 'all', 'category', 'intent', 'instruction', 'response'"}
+    
+    # Convert to dict for JSON serialization
+    return {
+        "dataframe": result_df.to_dict('records'),
+        "columns": result_df.columns.tolist(),
+        "shape": result_df.shape,
+        "pandas_df": result_df  # This will be used by the app to display as a pandas dataframe
+    }
+
 # Map function names to their implementations
 TOOL_FUNCTIONS = {
     "select_semantic_intent": select_semantic_intent,
@@ -250,5 +276,7 @@ TOOL_FUNCTIONS = {
     "show_examples": show_examples,
     "summarize": summarize,
     "get_intent_distribution": get_intent_distribution,
-    "get_category_distribution": get_category_distribution
+    "get_category_distribution": get_category_distribution,
+    "show_dataframe": show_dataframe,
+    "finish": lambda answer: {"answer": answer}
 }

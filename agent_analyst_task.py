@@ -7,8 +7,8 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from openai import OpenAI
 from datasets import load_dataset
-import streamlit as st
 import re
+# Removed global streamlit import
 
 class CodeResponse(BaseModel):
     thoughts: str = Field(..., description="Step-by-step reasoning about the query")
@@ -23,18 +23,10 @@ client = OpenAI(
 )
 
 # Load Bitext dataset
-@st.cache_data
 def load_bitext_data():
     return load_dataset("bitext/Bitext-customer-support-llm-chatbot-training-dataset", split="train").to_pandas()
 
 df = load_bitext_data()
-
-# Session state for chat history
-if "history" not in st.session_state:
-    st.session_state.history = []
-
-# Toggle planning mode
-planning_mode = st.radio("Select Planning Mode", ["Pre-planning", "ReActive"])
 
 def remove_think_tags(text):
     """Remove all content between <think> and </think> tags, including the tags."""
@@ -170,7 +162,22 @@ def ask_llm_to_fix_code(user_query, messages, history, mode, error_msg, code):
 
 
 # Execute structured question
-def handle_question(query, history, mode, max_retries=3):
+def handle_question(query, history, mode, streamlit_available=True, return_full_results=False, max_retries=3):
+    """
+    Handle a question using the pre-planning approach.
+    
+    Args:
+        query: User's question
+        history: Conversation history
+        mode: Planning mode
+        streamlit_available: Whether streamlit is available for UI display
+        return_full_results: Whether to return full results dict instead of just description
+        max_retries: Maximum number of retries for code execution
+        
+    Returns:
+        If return_full_results is False: Returns just the description string
+        If return_full_results is True: Returns a dict with all results
+    """
     q = query.lower()
     messages = make_prompt(q, history, mode)
     retry_count = 0
@@ -213,28 +220,47 @@ def handle_question(query, history, mode, max_retries=3):
                 result = result.sample(20, random_state=42).reset_index(drop=True)
             
             if result is not None:
-                st.markdown("**LLM Thought Process:**")
-                st.write(thoughts) 
-                st.write("code:", code)
+                results_data = {
+                    "thoughts": thoughts,
+                    "code": code,
+                    "result": result,
+                    "result_type": "dataframe" if isinstance(result, (pd.DataFrame, pd.Series)) else "scalar"
+                }
+                
+                # Only use streamlit if explicitly requested
+                if streamlit_available:
+                    import streamlit as st
+                    # Show thought process as requested
+                    st.markdown("**LLM Thought Process:**")
+                    st.write(thoughts) 
+                    st.write("code:", code)
+                    
+                    if isinstance(result, (pd.DataFrame, pd.Series)):
+                        st.dataframe(result)
+                
+                if isinstance(result, (pd.DataFrame, pd.Series)):
+                    not_executed = False
+                    description = describe_result_with_llm(result, query)
+                    results_data["description"] = description
+                    return results_data if return_full_results else description
+                elif isinstance(result, int):
+                    if streamlit_available:
+                        import streamlit as st
+                        st.write("The answer is an int type")
+                    return results_data if return_full_results else str(result)
+                else:
+                    return results_data if return_full_results else str(result)
             else:
                 return "No results generated - check code formatting"
-                
-            if isinstance(result, (pd.DataFrame, pd.Series)):
-                st.dataframe(result)
-                not_executed = False
-                description = describe_result_with_llm(result, query)
-                return description
-            elif isinstance(result, int):
-                st.write("The answer is an int type")
-                return str(result)
-            else:
-                return str(result)
 
         except Exception as e:
             error_type = type(e).__name__
             error_msg = f"{error_type}: {str(e)}, code: {code if 'code' in locals() else reply_cleaned}"
             retry_count += 1
-            st.write(f"Attempt {retry_count}: {error_msg}")
+            
+            if streamlit_available:
+                import streamlit as st
+                st.write(f"Attempt {retry_count}: {error_msg}")
 
             fixed_code_reply = ask_llm_to_fix_code(query, messages, history, mode, error_msg, reply_cleaned)
             try:
@@ -245,86 +271,12 @@ def handle_question(query, history, mode, max_retries=3):
 
     return f"Could not fix the code after {max_retries} attempts. Last error: {error_msg}"
 
-# Auto test mode (for running tests without using the Streamlit input box)
-if "RUN_TESTS" in os.environ and os.environ["RUN_TESTS"] == "1":
-    test_questions = [
-    "What are the most frequent categories?",
-    "What are the most frequent intents?",
-    "what are all the intents?",
-    "what are all the categories?",
-    "what are all the values in the category column?",
-    "do we have category order with intent other than cancel_order?",
-    "which intents exist when category is order?",
-    "which categories exist when intent is Obtain invoice?",
-    "Show examples of Category account",
-    "Show examples of intent",
-    "what are the intents of delivery",
-    "Show examples of Category contact",
-    "Show examples of intent View invoice",
-    "Show examples of Category refund",
-    "Show examples of Category order",
-    "What categories exist?",
-    "What intents exist?",
-    "which intents exist?",
-    "Show intent distributions",
-    "Show category distributions",
-    "can you give me an example of canceled order?",
-    "can you summarize me how do custommers approach us when canceling order",
-    "why are they asking for canceling order",
-    "how agents respond to that",
-    "what are the main tactics of response?",
-    "display category distribution",
-    "display intent distribution",
-    "what is the intent distribution",
-    "is there a category refund that its intent is not Review refund policy",
-    "i want to see intents",
-    "how many people asked to get a refund?",
-    "what kind of data do we have in the dataset?",
-    "what data do we have?",
-    "what is the data",
-    "what customers ask or request regarding Newsletter subscription",
-    "give examples of customer questions or requests about contact",
-    "what's your name",
-    "are you stupid?",
-    "ok whats in scope then?",
-    "any suggestion for a question i can ask you",
-    "are you connected to a dataset ?",
-    "you are stupid",
-    "do u know the name of the company",
-    "ok thanks. can i teach you things and then you'll know them?",
-    "do you have prices in the dataset?",
-    "whats the complaint that is getting solved least times",
-    "can you find requests that have replies which are inadequate",
-    "how many people in total contacted us?",
-    "how many customers in total sent us questions?",
-    "which delivery options customers asked for",
-    "what are the shipping methods?",
-    "what are the categories and intents?",
-        "what are the account types?",
-        "to wich accounts users switched?",
-        "How do I track the status of my order?",
-        "do you have costs in the dataset?"
-    ]
-
-    for i, question in enumerate(test_questions):
-        st.markdown(f"### Test {i+1}: {question}")
-        response = handle_question(question, st.session_state.history, planning_mode)
-        st.write("Response:", response)
-        st.write("---")
-else:
-
-    # Input from user
+# Tests have been moved to test_agents.py
+if __name__ == "__main__":
+    import streamlit as st
+    st.set_page_config(page_title="Data Analyst Agent - Bitext Assistant", layout="wide")
     st.title("Data Analyst Agent - Bitext Assistant")
-    query = st.text_input("Ask a question to the data analyst agent:")
-    
-    if query:
-            response = handle_question(query, st.session_state.history, planning_mode)
-    
-            # Store in history
-            st.session_state.history.append({"user": query, "assistant": response})
-        
-            # Display full history
-            st.markdown("### Conversation History")
-            for turn in reversed(st.session_state.history):
-                st.markdown(f"**User:** {turn['user']}")
-                st.markdown(f"**Assistant:** {turn['assistant']}")
+    st.write("This file is meant to be imported, not run directly.")
+    st.write("Please use the app.py file to run the application.")
+    st.write("For testing, use test_agents.py")
+# This code has been removed as it's now handled by app.py

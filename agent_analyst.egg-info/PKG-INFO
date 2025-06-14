@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: agent_analyst
+Version: 0.1
+Requires-Dist: streamlit
+Requires-Dist: pandas
+Requires-Dist: matplotlib
+Requires-Dist: seaborn
+Requires-Dist: openai
+Requires-Dist: datasets

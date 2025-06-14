@@ -20,5 +20,5 @@ except Exception as e:
     print(f"Error reading API key: {e}")
     sys.exit(1)
 
-# Run the Streamlit app
-subprocess.run(["streamlit", "run", "app/app.py"])
+# Run the test file
+subprocess.run(["streamlit", "run", "test_agents.py"])
