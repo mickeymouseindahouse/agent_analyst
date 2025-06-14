@@ -15,11 +15,17 @@ class CodeResponse(BaseModel):
     scope: bool = Field(..., description='boolean value. True if the user question is in-scope. False if the user question is out-of-scope') 
     pandas_code: str = Field(..., description="A complete pandas code snippet that assigns to variable 'result'")
 
+# Load environment variables
 load_dotenv()
+
+# Initialize OpenAI client with API key from environment
+api_key = os.environ.get("NEBIUS_API_KEY")
+if not api_key:
+    raise ValueError("NEBIUS_API_KEY environment variable is not set")
 
 client = OpenAI(
     base_url="https://api.studio.nebius.com/v1/",
-    api_key=os.getenv("NEBIUS_API_KEY")
+    api_key=api_key
 )
 
 # Load Bitext dataset
