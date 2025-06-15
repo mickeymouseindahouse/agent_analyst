@@ -3,14 +3,14 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from tools.tools import get_tools
-from agent.agent import ReActAgent
-from data.download_dataset import load_dataset_df
 import sys
 import os
 
-# Add the parent directory to the path to import agent_analyst_task
+# Add the parent directory to the path to import modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from tools.tools import get_tools
+from agent.agent import ReActAgent
+from data.download_dataset import load_dataset_df
 from agent_analyst_task import handle_question
 
 st.set_page_config(page_title="Customer Service Dataset Q&A", layout="wide")
